@@ -50,6 +50,8 @@
 		13EBBB3722C6FAF200230D2B /* lowpoly-house.obj in Resources */ = {isa = PBXBuildFile; fileRef = 13EBBB2922C6FAF200230D2B /* lowpoly-house.obj */; };
 		13EBBB3822C6FAF200230D2B /* lowpoly-house.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 13EBBB2A22C6FAF200230D2B /* lowpoly-house.mtl */; };
 		13EBBB3922C6FAF200230D2B /* lowpoly-house.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 13EBBB2A22C6FAF200230D2B /* lowpoly-house.mtl */; };
+		37E1CB1E2CACE0A3005B2FEE /* TextureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37E1CB1D2CACE0A3005B2FEE /* TextureController.swift */; };
+		37E1CB222CACFAA0005B2FEE /* ICB.metal in Sources */ = {isa = PBXBuildFile; fileRef = 37E1CB212CACFAA0005B2FEE /* ICB.metal */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -85,6 +87,8 @@
 		13EBBB2522C6FAF200230D2B /* plane.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = plane.mtl; sourceTree = "<group>"; };
 		13EBBB2922C6FAF200230D2B /* lowpoly-house.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "lowpoly-house.obj"; sourceTree = "<group>"; };
 		13EBBB2A22C6FAF200230D2B /* lowpoly-house.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "lowpoly-house.mtl"; sourceTree = "<group>"; };
+		37E1CB1D2CACE0A3005B2FEE /* TextureController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextureController.swift; sourceTree = "<group>"; };
+		37E1CB212CACFAA0005B2FEE /* ICB.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = ICB.metal; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -143,6 +147,8 @@
 				13A7ABC722C2374C00609310 /* Utility */,
 				1384A39622C1DFC2006036BA /* Models */,
 				1384A37422C1B389006036BA /* Assets.xcassets */,
+				37E1CB1D2CACE0A3005B2FEE /* TextureController.swift */,
+				37E1CB212CACFAA0005B2FEE /* ICB.metal */,
 			);
 			path = GPUDriven;
 			sourceTree = "<group>";
@@ -321,10 +327,12 @@
 				130F081822C435A0001B7909 /* Submesh.swift in Sources */,
 				130F081222C4352D001B7909 /* Model.swift in Sources */,
 				130F081B22C436F9001B7909 /* VertexDescriptor.swift in Sources */,
+				37E1CB1E2CACE0A3005B2FEE /* TextureController.swift in Sources */,
 				139D235322C851DC00C6DB03 /* Texturable.swift in Sources */,
 				130F082A22C43C57001B7909 /* ViewControllerExtension.swift in Sources */,
 				130F080F22C434CF001B7909 /* Camera.swift in Sources */,
 				1384A38122C1B3C2006036BA /* ViewController.swift in Sources */,
+				37E1CB222CACFAA0005B2FEE /* ICB.metal in Sources */,
 				1384A38922C1B53E006036BA /* Renderer.swift in Sources */,
 				130F081522C43563001B7909 /* Mesh.swift in Sources */,
 				1384A37322C1B388006036BA /* LocalClasses.swift in Sources */,

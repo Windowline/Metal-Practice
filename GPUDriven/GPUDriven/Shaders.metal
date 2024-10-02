@@ -35,36 +35,50 @@ using namespace metal;
 #import "Common.h"
 
 struct VertexIn {
-  float4 position [[attribute(Position)]];
-  float3 normal [[attribute(Normal)]];
-  float2 uv [[attribute(UV)]];
+    float4 position [[attribute(Position)]];
+    float3 normal [[attribute(Normal)]];
+    float2 uv [[attribute(UV)]];
 };
 
 struct VertexOut {
-  float4 position [[position]];
-  float2 uv;
+    float4 position [[position]];
+    float2 uv;
+    uint modelIdx [[flat]];
 };
 
 vertex VertexOut vertex_main(const VertexIn vertexIn [[stage_in]],
-                             constant Uniforms &uniforms [[buffer(BufferIndexUniforms)]],
-                             constant ModelParams &modelParams [[buffer(BufferIndexModelParams)]])
+                             constant Uniforms& uniforms [[buffer(BufferIndexUniforms)]],
+                             constant ModelParams* modelParamsArr [[buffer(BufferIndexModelParams)]],
+                             uint baseInstance [[base_instance]])
 {
-  VertexOut out {
-    .position = uniforms.projectionMatrix * uniforms.viewMatrix
-                       * modelParams.modelMatrix * vertexIn.position,
-    .uv = vertexIn.uv
-  };
-  return out;
+    ModelParams modelParams = modelParamsArr[baseInstance];
+    
+    VertexOut out {
+        .position = uniforms.projectionMatrix * uniforms.viewMatrix
+                           * modelParams.modelMatrix * vertexIn.position,
+        .uv = vertexIn.uv,
+        .modelIdx = baseInstance
+    };
+   
+    return out;
 }
 
-fragment float4 fragment_main(VertexOut in [[stage_in]],
-                              texture2d<float> baseColorTexture [[texture(BaseColorTexture)]],
-                              texture2d<float> normalTexture [[texture(NormalTexture)]],
-                              constant FragmentUniforms &fragmentUniforms [[buffer(BufferIndexFragmentUniforms)]],
-                              constant ModelParams &modelParams [[buffer(BufferIndexModelParams)]]) {
-  
-  constexpr sampler textureSampler(filter::linear, address::repeat);
-  float3 baseColor = baseColorTexture.sample(textureSampler,
-                                             in.uv * modelParams.tiling).rgb;
-  return float4(baseColor, 1);
+struct Textures {
+    texture2d<float> colorTex;
+    texture2d<float> normalTex;
+};
+
+fragment float4 fragment_main(
+                              VertexOut in [[stage_in]],
+                              constant Textures& textures [[buffer(BufferIndexTextures)]],
+                              constant FragmentUniforms& fragUniforms [[buffer(BufferIndexFragmentUniforms)]],
+                              constant ModelParams* modelParamsArr [[buffer(BufferIndexModelParams)]]
+                              ) 
+{
+    ModelParams modelParams = modelParamsArr[in.modelIdx];
+    constexpr sampler textureSampler(filter::linear, address::repeat);
+    float3 color = textures.colorTex.sample(textureSampler,
+                                            in.uv * modelParams.tiling).rgb;
+    
+    return float4(color, 1);
 }

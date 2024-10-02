@@ -33,61 +33,93 @@ import MetalKit
 
 class Model: Node {
 
-  let pipelineState: MTLRenderPipelineState
-  var tiling: UInt32 = 1
-  var vertexBuffer: MTLBuffer!
-  let colorTexture: MTLTexture?
-  let normalTexture: MTLTexture?
-  let submesh: MTKSubmesh
+    let pipelineState: MTLRenderPipelineState
+    var tiling: UInt32 = 1
+    var vertexBuffer: MTLBuffer!
+    let colorTexture: Int?
+    let normalTexture: Int?
+    let submesh: MTKSubmesh
   
-  let vertexFunction: MTLFunction
-  let fragmentFunction: MTLFunction
+    let vertexFunction: MTLFunction
+    let fragmentFunction: MTLFunction
+    
+    var texturesBuffer: MTLBuffer!
 
-  init(name: String) {
-    guard
-      let assetUrl = Bundle.main.url(forResource: name, withExtension: nil) else {
-        fatalError("Model: \(name) not found")
-    }
-    let allocator = MTKMeshBufferAllocator(device: Renderer.device)
-    let asset = MDLAsset(url: assetUrl,
+    init(name: String) {
+        guard
+            let assetUrl = Bundle.main.url(forResource: name, withExtension: nil) else {
+            fatalError("Model: \(name) not found")
+        }
+        
+        let allocator = MTKMeshBufferAllocator(device: Renderer.device)
+        
+        let asset = MDLAsset(url: assetUrl,
                          vertexDescriptor: MDLVertexDescriptor.defaultVertexDescriptor,
                          bufferAllocator: allocator)
-    let (mdlMeshes, mtkMeshes) = try! MTKMesh.newMeshes(asset: asset,
-                                                        device: Renderer.device)
-    let meshes = zip(mdlMeshes, mtkMeshes).map {
-      Mesh(mdlMesh: $0.0, mtkMesh: $0.1)
-    }
+        
+        let (mdlMeshes, mtkMeshes) = try! MTKMesh.newMeshes(asset: asset,
+                                                            device: Renderer.device)
+        let meshes = zip(mdlMeshes, mtkMeshes).map {
+            Mesh(mdlMesh: $0.0, mtkMesh: $0.1)
+        }
 
-    vertexFunction = Renderer.lib.makeFunction(name: "vertex_main")!
-    fragmentFunction = Renderer.lib.makeFunction(name: "fragment_main")!
-    pipelineState = Model.buildPipelineState(vertexFunction: vertexFunction,
-                                             fragmentFunction: fragmentFunction)
-    vertexBuffer = meshes[0].mtkMesh.vertexBuffers[0].buffer
-    submesh = meshes[0].submeshes[0].mtkSubmesh
-    let textures = meshes[0].submeshes[0].textures
-    colorTexture = textures.baseColor
-    normalTexture = textures.normal
-    super.init()
-    self.name = name
-  }
-  
-  private static func buildPipelineState(vertexFunction: MTLFunction,
-                                         fragmentFunction: MTLFunction) -> MTLRenderPipelineState {
-    var pipelineState: MTLRenderPipelineState
-    let pipelineDescriptor = MTLRenderPipelineDescriptor()
-    pipelineDescriptor.vertexFunction = vertexFunction
-    pipelineDescriptor.fragmentFunction = fragmentFunction
-    let vertexDescriptor = MDLVertexDescriptor.defaultVertexDescriptor
-    pipelineDescriptor.vertexDescriptor = MTKMetalVertexDescriptorFromModelIO(vertexDescriptor)
-    pipelineDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm
-    pipelineDescriptor.depthAttachmentPixelFormat = .depth32Float
-    do {
-      pipelineState = try Renderer.device.makeRenderPipelineState(descriptor: pipelineDescriptor)
-    } catch let error {
-      fatalError(error.localizedDescription)
+        vertexFunction = Renderer.lib.makeFunction(name: "vertex_main")!
+        fragmentFunction = Renderer.lib.makeFunction(name: "fragment_main")!
+        
+        pipelineState = Model.buildPipelineState(vertexFunction: vertexFunction,
+                                                 fragmentFunction: fragmentFunction)
+        
+        vertexBuffer = meshes[0].mtkMesh.vertexBuffers[0].buffer
+        submesh = meshes[0].submeshes[0].mtkSubmesh
+        
+        let textures = meshes[0].submeshes[0].textures
+        colorTexture = TextureController.addTexture(texture: textures.baseColor)
+        normalTexture = TextureController.addTexture(texture: textures.normal)
+        
+        super.init()
+        self.name = name
     }
-    return pipelineState
-  }
+  
+    func initializeTextures() {
+        let textureEncoder = fragmentFunction.makeArgumentEncoder(bufferIndex: Int(BufferIndexTextures.rawValue))
+        
+        texturesBuffer = Renderer.device.makeBuffer(length: textureEncoder.encodedLength)!
+        texturesBuffer.label = "Textures"
+
+        textureEncoder.setArgumentBuffer(texturesBuffer, offset: 0)
+        
+        if let index = colorTexture {
+            textureEncoder.setTexture(TextureController.textures[index], index: 0)
+        }
+        
+        if let index = normalTexture {
+            textureEncoder.setTexture(TextureController.textures[index], index: 1)
+        }
+    }
+ 
+    private static func buildPipelineState(vertexFunction: MTLFunction,
+                                         fragmentFunction: MTLFunction) -> MTLRenderPipelineState {
+      
+        var pipelineState: MTLRenderPipelineState
+        
+        let pipelineDesc = MTLRenderPipelineDescriptor()
+        pipelineDesc.vertexFunction = vertexFunction
+        pipelineDesc.fragmentFunction = fragmentFunction
+      
+        let vertexDescriptor = MDLVertexDescriptor.defaultVertexDescriptor
+        pipelineDesc.vertexDescriptor = MTKMetalVertexDescriptorFromModelIO(vertexDescriptor)
+        pipelineDesc.colorAttachments[0].pixelFormat = .bgra8Unorm
+        pipelineDesc.depthAttachmentPixelFormat = .depth32Float
+        pipelineDesc.supportIndirectCommandBuffers = true
+        
+        do {
+            pipelineState = try Renderer.device.makeRenderPipelineState(descriptor: pipelineDesc)
+        } catch let error {
+            fatalError(error.localizedDescription)
+        }
+      
+        return pipelineState
+    }
 }
 
 

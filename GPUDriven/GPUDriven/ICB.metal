@@ -33,4 +33,51 @@
 #include <metal_stdlib>
 using namespace metal;
 
+#import "Common.h"
 
+struct ICBContainer {
+    command_buffer icb [[id(0)]];
+};
+
+struct Model {
+    constant float* vertexBuffer;
+    constant uint* indexBuffer;
+    constant float* texturesBuffer;
+    render_pipeline_state pipelineState;
+};
+
+
+kernel void encodeCommands(
+    uint modelIdx [[thread_position_in_grid]],
+    constant Uniforms& uniforms [[buffer(BufferIndexUniforms)]],
+    constant FragmentUniforms& fragUniforms [[buffer(BufferIndexFragmentUniforms)]],
+    constant MTLDrawIndexedPrimitivesIndirectArguments* drawArgsArr [[buffer(BufferIndexDrawArguments)]],
+    constant ModelParams* modelParamsArr [[buffer(BufferIndexModelParams)]],
+    constant Model* modelArr [[buffer(BufferIndexModels)]],
+    device ICBContainer* icbContainer [[buffer(BufferIndexICB)]]
+    )
+{
+    Model model = modelArr[modelIdx];
+    MTLDrawIndexedPrimitivesIndirectArguments drawArgs = drawArgsArr[modelIdx];
+    
+    render_command cmd(icbContainer->icb, modelIdx);
+    
+    cmd.set_render_pipeline_state(model.pipelineState);
+    
+    cmd.set_vertex_buffer(&uniforms, BufferIndexUniforms);
+    cmd.set_fragment_buffer(&fragUniforms, BufferIndexFragmentUniforms);
+    
+    cmd.set_vertex_buffer(modelParamsArr, BufferIndexModelParams);
+    cmd.set_fragment_buffer(modelParamsArr, BufferIndexModelParams);
+    
+    cmd.set_vertex_buffer(model.vertexBuffer, 0);
+    cmd.set_fragment_buffer(model.texturesBuffer, BufferIndexTextures);
+    
+    cmd.draw_indexed_primitives(primitive_type::triangle,
+                                drawArgs.indexCount,
+                                model.indexBuffer + drawArgs.indexStart,
+                                drawArgs.instanceCount,
+                                drawArgs.baseVertex,
+                                drawArgs.baseInstance);
+                               
+}

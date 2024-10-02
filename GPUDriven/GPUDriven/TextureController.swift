@@ -29,5 +29,73 @@
  * THE SOFTWARE.
  */
 
+import MetalKit
 
-import Foundation
+class TextureController {
+  static var textures: [MTLTexture] = []
+  static var heap: MTLHeap?
+  
+  static func addTexture(texture: MTLTexture?) -> Int? {
+      guard let texture = texture else { return nil }
+      TextureController.textures.append(texture)
+      return TextureController.textures.count - 1
+  }
+  
+  static func buildHeap() -> MTLHeap?  {
+      let descriptors = textures.map { texture in
+          MTLTextureDescriptor.descriptor(from: texture)
+      }
+      
+      let sizeAndAligns = descriptors.map {
+          Renderer.device.heapTextureSizeAndAlign(descriptor: $0)
+      }
+      
+      let heapDescriptor = MTLHeapDescriptor()
+      
+      heapDescriptor.size = sizeAndAligns.reduce(0) {
+          $0 + $1.size - ($1.size & ($1.align - 1)) + $1.align
+      }
+      
+      if heapDescriptor.size == 0 {
+          return nil
+      }
+      
+      guard let heap = Renderer.device.makeHeap(descriptor: heapDescriptor) else { fatalError() }
+    
+      let heapTextures = descriptors.map { descriptor -> MTLTexture in
+          descriptor.storageMode = heapDescriptor.storageMode
+          return heap.makeTexture(descriptor: descriptor)!
+      }
+    
+      guard
+          let cmdBuf = Renderer.cmdQ.makeCommandBuffer(),
+          let blitEncoder = cmdBuf.makeBlitCommandEncoder() else { fatalError() }
+      
+      zip(textures, heapTextures).forEach { (texture, heapTexture) in
+          var region = MTLRegionMake2D(0, 0, texture.width, texture.height)
+          for level in 0..<texture.mipmapLevelCount {
+              for slice in 0..<texture.arrayLength {
+                  blitEncoder.copy(from: texture,
+                                   sourceSlice: slice,
+                                   sourceLevel: level,
+                                   sourceOrigin: region.origin,
+                                   sourceSize: region.size,
+                                   to: heapTexture,
+                                   destinationSlice: slice,
+                                   destinationLevel: level,
+                                   destinationOrigin: region.origin)
+              }
+              region.size.width /= 2
+              region.size.height /= 2
+          }
+      }
+      
+        blitEncoder.endEncoding()
+        cmdBuf.commit()
+        TextureController.textures = heapTextures
+    
+        return heap
+    }
+    
+}
+
