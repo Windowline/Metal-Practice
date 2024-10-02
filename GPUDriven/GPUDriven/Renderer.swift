@@ -9,19 +9,18 @@ class Renderer: NSObject {
     var fragUniforms = FragmentUniforms()
     var modelParams = ModelParams()
     
-    let depthStencilState: MTLDepthStencilState
-    
     var uniformsBuf: MTLBuffer!
     var fragmentUniformsBuf: MTLBuffer!
     var modelParamsBuf: MTLBuffer!
-    
+        
     var icb: MTLIndirectCommandBuffer!
     let icbComputeFunction: MTLFunction
     let icbPipelineState: MTLComputePipelineState
     var icbBuf: MTLBuffer!
     var modelsBuf: MTLBuffer!
     var drawArgBuf: MTLBuffer!
-
+    
+    let depthStencilState: MTLDepthStencilState
     
     lazy var camera: Camera = {
         let camera = ArcballCamera()
@@ -73,7 +72,7 @@ class Renderer: NSObject {
     
     
     func initialize() {
-        TextureController.heap = TextureController.buildHeap()
+        TextureController.heap = TextureController.buildHeapAndCopyTextures()
         
         models.forEach { model in
             model.initializeTextures()
@@ -101,7 +100,9 @@ class Renderer: NSObject {
         icbDesc.inheritPipelineState = false
         
         guard let icb = Renderer.device.makeIndirectCommandBuffer(descriptor: icbDesc,
-                                                             maxCommandCount: models.count) else { fatalError() }
+                                                                  maxCommandCount: models.count) else {
+            fatalError()
+        }
         
         self.icb = icb
         
@@ -114,7 +115,7 @@ class Renderer: NSObject {
         var mBufsLen = 0
         
         for model in models {
-            let modelEncoder = icbComputeFunction.makeArgumentEncoder(bufferIndex: Int(BufferIndexModels.rawValue))
+            let modelEncoder = icbComputeFunction.makeArgumentEncoder(bufferIndex:Int(BufferIndexModels.rawValue))
             let argBuf = Renderer.device.makeBuffer(length: modelEncoder.encodedLength)!
             
             modelEncoder.setArgumentBuffer(argBuf, offset: 0)
@@ -127,7 +128,7 @@ class Renderer: NSObject {
             mBufsLen += argBuf.length
         }
         
-        //copy to self.modelsBuf
+        // copy from mBufs to self.modelsBuf
         modelsBuf = Renderer.device.makeBuffer(length: mBufsLen)
         modelsBuf.label = "Models Array Buffer"
         var offset = 0
@@ -139,7 +140,7 @@ class Renderer: NSObject {
             offset += mBuf.length
         }
         
-        
+        // fill drawArgBuf
         let drawLen = models.count * MemoryLayout<MTLDrawIndexedPrimitivesIndirectArguments>.stride
         drawArgBuf = Renderer.device.makeBuffer(length: drawLen)
         drawArgBuf.label = "Draw Arguments"
@@ -211,15 +212,15 @@ extension Renderer: MTKViewDelegate {
                                  offset: 0,
                                  index: Int(BufferIndexFragmentUniforms.rawValue))
         
-        computeEncoder.setBuffer(drawArgBuf, 
-                                 offset: 0,
-                                 index: Int(BufferIndexDrawArguments.rawValue))
-        
         computeEncoder.setBuffer(modelParamsBuf, 
                                  offset: 0,
                                  index: Int(BufferIndexModelParams.rawValue))
         
-        computeEncoder.setBuffer(modelsBuf, 
+        computeEncoder.setBuffer(drawArgBuf,
+                                 offset: 0,
+                                 index: Int(BufferIndexDrawArguments.rawValue))
+        
+        computeEncoder.setBuffer(modelsBuf,
                                  offset: 0,
                                  index: Int(BufferIndexModels.rawValue))
         

@@ -41,7 +41,7 @@ class TextureController {
       return TextureController.textures.count - 1
   }
   
-  static func buildHeap() -> MTLHeap?  {
+  static func buildHeapAndCopyTextures() -> MTLHeap?  {
       let descriptors = textures.map { texture in
           MTLTextureDescriptor.descriptor(from: texture)
       }
