@@ -58,8 +58,8 @@ class Model: Node {
       Mesh(mdlMesh: $0.0, mtkMesh: $0.1)
     }
 
-    vertexFunction = Renderer.library.makeFunction(name: "vertex_main")!
-    fragmentFunction = Renderer.library.makeFunction(name: "fragment_main")!
+    vertexFunction = Renderer.lib.makeFunction(name: "vertex_main")!
+    fragmentFunction = Renderer.lib.makeFunction(name: "fragment_main")!
     pipelineState = Model.buildPipelineState(vertexFunction: vertexFunction,
                                              fragmentFunction: fragmentFunction)
     vertexBuffer = meshes[0].mtkMesh.vertexBuffers[0].buffer
