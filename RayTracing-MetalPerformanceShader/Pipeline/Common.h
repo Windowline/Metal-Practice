@@ -3,10 +3,30 @@
 
 #import <simd/simd.h>
 
-typedef struct {
-  matrix_float4x4 modelMatrix;
-  matrix_float4x4 viewMatrix;
-  matrix_float4x4 projectionMatrix;
-} Uniforms;
+struct Camera {
+    vector_float3 pos;
+    vector_float3 right;
+    vector_float3 up;
+    vector_float3 forward;
+};
+
+struct AreaLight {
+    vector_float3 pos;
+    vector_float3 forward;
+    vector_float3 right;
+    vector_float3 up;
+    vector_float3 color;
+};
+
+struct Uniforms
+{
+    unsigned int width;
+    unsigned int height;
+    unsigned int blocksWide;
+    unsigned int frameIdx;
+    struct Camera camera;
+    struct AreaLight light;
+};
+
 
 #endif /* Common_h */

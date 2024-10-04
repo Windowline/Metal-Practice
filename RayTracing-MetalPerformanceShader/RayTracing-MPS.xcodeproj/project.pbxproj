@@ -15,7 +15,16 @@
 		1384A38D22C1BE70006036BA /* Shaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 1384A38C22C1BE70006036BA /* Shaders.metal */; };
 		37C01210297FB8A300D2C3E9 /* MathLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37C0120F297FB8A300D2C3E9 /* MathLibrary.swift */; };
 		37C7076C2CAE87FD00DE4880 /* RenderExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37C7076B2CAE87FD00DE4880 /* RenderExtension.swift */; };
-		37C7076E2CAE88E000DE4880 /* Models in Resources */ = {isa = PBXBuildFile; fileRef = 37C7076D2CAE88E000DE4880 /* Models */; };
+		37C7077B2CAECE3F00DE4880 /* plane-back.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 37C707702CAECE3F00DE4880 /* plane-back.mtl */; };
+		37C7077C2CAECE3F00DE4880 /* plane-back.obj in Resources */ = {isa = PBXBuildFile; fileRef = 37C707712CAECE3F00DE4880 /* plane-back.obj */; };
+		37C7077D2CAECE3F00DE4880 /* plane.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 37C707722CAECE3F00DE4880 /* plane.mtl */; };
+		37C7077E2CAECE3F00DE4880 /* plane.obj in Resources */ = {isa = PBXBuildFile; fileRef = 37C707732CAECE3F00DE4880 /* plane.obj */; };
+		37C7077F2CAECE3F00DE4880 /* sphere.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 37C707742CAECE3F00DE4880 /* sphere.mtl */; };
+		37C707802CAECE3F00DE4880 /* sphere.obj in Resources */ = {isa = PBXBuildFile; fileRef = 37C707752CAECE3F00DE4880 /* sphere.obj */; };
+		37C707812CAECE3F00DE4880 /* train.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 37C707762CAECE3F00DE4880 /* train.mtl */; };
+		37C707822CAECE3F00DE4880 /* train.obj in Resources */ = {isa = PBXBuildFile; fileRef = 37C707772CAECE3F00DE4880 /* train.obj */; };
+		37C707832CAECE3F00DE4880 /* treefir.mtl in Resources */ = {isa = PBXBuildFile; fileRef = 37C707782CAECE3F00DE4880 /* treefir.mtl */; };
+		37C707842CAECE3F00DE4880 /* treefir.obj in Resources */ = {isa = PBXBuildFile; fileRef = 37C707792CAECE3F00DE4880 /* treefir.obj */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,7 +39,17 @@
 		1384A38C22C1BE70006036BA /* Shaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = Shaders.metal; sourceTree = "<group>"; };
 		37C0120F297FB8A300D2C3E9 /* MathLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MathLibrary.swift; sourceTree = "<group>"; };
 		37C7076B2CAE87FD00DE4880 /* RenderExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderExtension.swift; sourceTree = "<group>"; };
-		37C7076D2CAE88E000DE4880 /* Models */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Models; sourceTree = "<group>"; };
+		37C7076F2CAE922800DE4880 /* ShaderTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ShaderTypes.h; sourceTree = "<group>"; };
+		37C707702CAECE3F00DE4880 /* plane-back.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "plane-back.mtl"; sourceTree = "<group>"; };
+		37C707712CAECE3F00DE4880 /* plane-back.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "plane-back.obj"; sourceTree = "<group>"; };
+		37C707722CAECE3F00DE4880 /* plane.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = plane.mtl; sourceTree = "<group>"; };
+		37C707732CAECE3F00DE4880 /* plane.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = plane.obj; sourceTree = "<group>"; };
+		37C707742CAECE3F00DE4880 /* sphere.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sphere.mtl; sourceTree = "<group>"; };
+		37C707752CAECE3F00DE4880 /* sphere.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sphere.obj; sourceTree = "<group>"; };
+		37C707762CAECE3F00DE4880 /* train.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = train.mtl; sourceTree = "<group>"; };
+		37C707772CAECE3F00DE4880 /* train.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = train.obj; sourceTree = "<group>"; };
+		37C707782CAECE3F00DE4880 /* treefir.mtl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = treefir.mtl; sourceTree = "<group>"; };
+		37C707792CAECE3F00DE4880 /* treefir.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = treefir.obj; sourceTree = "<group>"; };
 		37F2FF5B297EBD9D00D54500 /* Common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Common.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -64,7 +83,7 @@
 		1384A37122C1B388006036BA /* Pipeline */ = {
 			isa = PBXGroup;
 			children = (
-				37C7076D2CAE88E000DE4880 /* Models */,
+				37C7077A2CAECE3F00DE4880 /* Models */,
 				1384A37222C1B388006036BA /* AppDelegate.swift */,
 				1384A38022C1B3C2006036BA /* ViewController.swift */,
 				1384A38822C1B53E006036BA /* Renderer.swift */,
@@ -76,8 +95,26 @@
 				37F2FF5B297EBD9D00D54500 /* Common.h */,
 				37C0120F297FB8A300D2C3E9 /* MathLibrary.swift */,
 				37C7076B2CAE87FD00DE4880 /* RenderExtension.swift */,
+				37C7076F2CAE922800DE4880 /* ShaderTypes.h */,
 			);
 			path = Pipeline;
+			sourceTree = "<group>";
+		};
+		37C7077A2CAECE3F00DE4880 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				37C707702CAECE3F00DE4880 /* plane-back.mtl */,
+				37C707712CAECE3F00DE4880 /* plane-back.obj */,
+				37C707722CAECE3F00DE4880 /* plane.mtl */,
+				37C707732CAECE3F00DE4880 /* plane.obj */,
+				37C707742CAECE3F00DE4880 /* sphere.mtl */,
+				37C707752CAECE3F00DE4880 /* sphere.obj */,
+				37C707762CAECE3F00DE4880 /* train.mtl */,
+				37C707772CAECE3F00DE4880 /* train.obj */,
+				37C707782CAECE3F00DE4880 /* treefir.mtl */,
+				37C707792CAECE3F00DE4880 /* treefir.obj */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -138,9 +175,18 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				37C7076E2CAE88E000DE4880 /* Models in Resources */,
+				37C7077F2CAECE3F00DE4880 /* sphere.mtl in Resources */,
 				1384A37522C1B389006036BA /* Assets.xcassets in Resources */,
+				37C707802CAECE3F00DE4880 /* sphere.obj in Resources */,
+				37C7077C2CAECE3F00DE4880 /* plane-back.obj in Resources */,
+				37C7077E2CAECE3F00DE4880 /* plane.obj in Resources */,
+				37C7077D2CAECE3F00DE4880 /* plane.mtl in Resources */,
+				37C707832CAECE3F00DE4880 /* treefir.mtl in Resources */,
+				37C707822CAECE3F00DE4880 /* train.obj in Resources */,
+				37C7077B2CAECE3F00DE4880 /* plane-back.mtl in Resources */,
+				37C707842CAECE3F00DE4880 /* treefir.obj in Resources */,
 				1384A37822C1B389006036BA /* Main.storyboard in Resources */,
+				37C707812CAECE3F00DE4880 /* train.mtl in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

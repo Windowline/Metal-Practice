@@ -37,7 +37,8 @@ extension Renderer {
         let assetURL = Bundle.main.url(forResource: name, withExtension: "obj")!
         let allocator = MTKMeshBufferAllocator(device: device)
         let asset = MDLAsset(url: assetURL,
-                             vertexDescriptor: vtxDesc,
+//                             vertexDescriptor: vtxDesc,
+                             vertexDescriptor: vertexDescriptor,
                              bufferAllocator: allocator)
         
         guard let mdlMesh = asset.object(at: 0) as? MDLMesh,
