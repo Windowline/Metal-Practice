@@ -36,6 +36,8 @@ class Renderer: NSObject {
   
     var size = CGSize.zero
     var frameIdx: uint = 0
+    
+    let randomSize = 256
   
     lazy var vertexDescriptor: MDLVertexDescriptor = {
         let desc = MDLVertexDescriptor()
@@ -156,7 +158,7 @@ class Renderer: NSObject {
       uniformBuffer = device.makeBuffer(length: MemoryLayout<Uniforms>.stride,
                                         options: options)
       
-      randomBuffer = device.makeBuffer(length: 256 * MemoryLayout<float2>.stride,
+      randomBuffer = device.makeBuffer(length: randomSize * MemoryLayout<float2>.stride,
                                        options: options)
       
       vertexPosBuffer = device.makeBuffer(bytes: &vertices,
@@ -201,21 +203,20 @@ class Renderer: NSObject {
     
       uniforms.pointee.width = uint(size.width)
       uniforms.pointee.height = uint(size.height)
-      uniforms.pointee.blocksWide = ((uniforms.pointee.width) + 15) / 16
       uniforms.pointee.frameIdx = frameIdx
         
       uniformBuffer?.didModifyRange(0..<MemoryLayout<Uniforms>.stride)
   }
   
   func updateRandomBuffer() {
-      var random = randomBuffer!.contents().bindMemory(to: float2.self, capacity: 256)
+      var random = randomBuffer!.contents().bindMemory(to: float2.self, capacity: randomSize)
       
-      for _ in 0..<256 {
+      for _ in 0..<randomSize {
           random.pointee = float2(Float(drand48()), Float(drand48()) )
           random = random.advanced(by: 1)
       }
       
-      randomBuffer?.didModifyRange(0..<256 * MemoryLayout<float2>.stride)
+      randomBuffer?.didModifyRange(0..<randomSize * MemoryLayout<float2>.stride)
   }
 
 }
