@@ -34,15 +34,7 @@ class Renderer: NSObject {
     let rayStride = MemoryLayout<MPSRayOriginMinDistanceDirectionMaxDistance>.stride
                     + MemoryLayout<float3>.stride
   
-    let maxFramesInFlight = 3
-    let alignedUniformsSize = (MemoryLayout<Uniforms>.size + 255) & ~255
-    
-    var semaphore: DispatchSemaphore!
     var size = CGSize.zero
-    
-    var randomBufferOffset = 0
-    var uniformBufferOffset = 0
-    var uniformBufferIndex = 0
     var frameIdx: uint = 0
   
     lazy var vertexDescriptor: MDLVertexDescriptor = {
@@ -84,8 +76,6 @@ class Renderer: NSObject {
         metalView.delegate = self
         
         mtkView(metalView, drawableSizeWillChange: metalView.bounds.size)
-        
-        semaphore = DispatchSemaphore.init(value: maxFramesInFlight)
         
         buildPipelines(view: metalView)
         createScene()
@@ -159,16 +149,14 @@ class Renderer: NSObject {
   
   
   func createBuffers() {
-      let uniformBufferSize = alignedUniformsSize * maxFramesInFlight
-
       let options: MTLResourceOptions = {
           return .storageModeManaged
       } ()
     
-      uniformBuffer = device.makeBuffer(length: uniformBufferSize,
+      uniformBuffer = device.makeBuffer(length: MemoryLayout<Uniforms>.stride,
                                         options: options)
       
-      randomBuffer = device.makeBuffer(length: 256 * MemoryLayout<float2>.stride * maxFramesInFlight,
+      randomBuffer = device.makeBuffer(length: 256 * MemoryLayout<float2>.stride,
                                        options: options)
       
       vertexPosBuffer = device.makeBuffer(bytes: &vertices,
@@ -184,16 +172,8 @@ class Renderer: NSObject {
                                              options: options)
   }
   
-  func update() {
-      updateUniforms()
-      updateRandomBuffer()
-      uniformBufferIndex = (uniformBufferIndex + 1) % maxFramesInFlight
-  }
-  
   func updateUniforms() {
-      uniformBufferOffset = alignedUniformsSize * uniformBufferIndex
-      let pointer = uniformBuffer!.contents().advanced(by: uniformBufferOffset)
-      let uniforms = pointer.bindMemory(to: Uniforms.self, capacity: 1)
+      let uniforms = uniformBuffer!.contents().bindMemory(to: Uniforms.self, capacity: 1)
     
       var camera = Camera()
       camera.pos = float3(0.0, 1.0, 3.38)
@@ -223,22 +203,19 @@ class Renderer: NSObject {
       uniforms.pointee.height = uint(size.height)
       uniforms.pointee.blocksWide = ((uniforms.pointee.width) + 15) / 16
       uniforms.pointee.frameIdx = frameIdx
-      frameIdx += 1
         
-      uniformBuffer?.didModifyRange(uniformBufferOffset..<(uniformBufferOffset + alignedUniformsSize))
+      uniformBuffer?.didModifyRange(0..<MemoryLayout<Uniforms>.stride)
   }
   
   func updateRandomBuffer() {
-      randomBufferOffset = 256 * MemoryLayout<float2>.stride * uniformBufferIndex
-      let pointer = randomBuffer!.contents().advanced(by: randomBufferOffset)
-      var random = pointer.bindMemory(to: float2.self, capacity: 256)
+      var random = randomBuffer!.contents().bindMemory(to: float2.self, capacity: 256)
       
       for _ in 0..<256 {
           random.pointee = float2(Float(drand48()), Float(drand48()) )
           random = random.advanced(by: 1)
       }
-    
-      randomBuffer?.didModifyRange(randomBufferOffset..<(randomBufferOffset + 256 * MemoryLayout<float2>.stride))
+      
+      randomBuffer?.didModifyRange(0..<256 * MemoryLayout<float2>.stride)
   }
 
 }
@@ -273,17 +250,13 @@ extension Renderer: MTKViewDelegate {
     }
     
     func draw(in view: MTKView) {
-        semaphore.wait()
-        
         guard let commandBuffer = commandQ.makeCommandBuffer() else {
             return
         }
         
-        commandBuffer.addCompletedHandler { cb in
-            self.semaphore.signal()
-        }
-        
-        update()
+        frameIdx += 1
+        updateUniforms()
+        updateRandomBuffer()
         
         // 1 generate primary ray
         let width = Int(size.width)
@@ -296,9 +269,9 @@ extension Renderer: MTKViewDelegate {
         var computeEncoder = commandBuffer.makeComputeCommandEncoder()
         computeEncoder?.setComputePipelineState(primaryRayPipeline)
         computeEncoder?.label = "Generate Rays"
-        computeEncoder?.setBuffer(uniformBuffer, offset: uniformBufferOffset, index: 0) //read
+        computeEncoder?.setBuffer(uniformBuffer, offset: 0, index: 0) //read
         computeEncoder?.setBuffer(rayBuffer, offset: 0, index: 1) // write primary ray
-        computeEncoder?.setBuffer(randomBuffer, offset: randomBufferOffset, index: 2) // read
+        computeEncoder?.setBuffer(randomBuffer, offset: 0, index: 2) // read
         computeEncoder?.setTexture(renderTarget, index: 0) // write black
         computeEncoder?.dispatchThreadgroups(threadGroups, threadsPerThreadgroup: threadsPerGroup)
         computeEncoder?.endEncoding()
@@ -321,13 +294,13 @@ extension Renderer: MTKViewDelegate {
             computeEncoder = commandBuffer.makeComputeCommandEncoder()
             computeEncoder?.setComputePipelineState(rayBouncePipeline!)
             computeEncoder?.label = "Ray Bounce"
-            computeEncoder?.setBuffer(uniformBuffer, offset: uniformBufferOffset, index: 0) // read
+            computeEncoder?.setBuffer(uniformBuffer, offset: 0, index: 0) // read
             computeEncoder?.setBuffer(rayBuffer, offset: 0, index: 1) // read, write
             computeEncoder?.setBuffer(shadowRayBuffer, offset: 0, index: 2) // read, write
             computeEncoder?.setBuffer(intersectionBuffer, offset: 0, index: 3) // read
             computeEncoder?.setBuffer(vertexColorBuffer, offset: 0, index: 4) // read
             computeEncoder?.setBuffer(vertexNormalBuffer, offset: 0, index: 5) // read
-            computeEncoder?.setBuffer(randomBuffer, offset: randomBufferOffset, index: 6) // read
+            computeEncoder?.setBuffer(randomBuffer, offset: 0, index: 6) // read
             computeEncoder?.dispatchThreadgroups(threadGroups, threadsPerThreadgroup: threadsPerGroup)
             computeEncoder?.endEncoding()
             
@@ -347,7 +320,7 @@ extension Renderer: MTKViewDelegate {
             computeEncoder = commandBuffer.makeComputeCommandEncoder()
             computeEncoder?.setComputePipelineState(rayColorPipeline!)
             computeEncoder?.label = "Ray Color"
-            computeEncoder?.setBuffer(uniformBuffer, offset: uniformBufferOffset, index: 0)
+            computeEncoder?.setBuffer(uniformBuffer, offset: 0, index: 0)
             computeEncoder?.setBuffer(shadowRayBuffer, offset: 0, index: 1)
             computeEncoder?.setBuffer(intersectionBuffer, offset: 0, index: 2)
             computeEncoder?.setTexture(renderTarget, index: 0)
@@ -359,7 +332,7 @@ extension Renderer: MTKViewDelegate {
         computeEncoder = commandBuffer.makeComputeCommandEncoder()
         computeEncoder?.setComputePipelineState(accumulatePipeline)
         computeEncoder?.label = "Accumulation"
-        computeEncoder?.setBuffer(uniformBuffer, offset: uniformBufferOffset, index: 0)
+        computeEncoder?.setBuffer(uniformBuffer, offset: 0, index: 0)
         computeEncoder?.setTexture(renderTarget, index: 0)
         computeEncoder?.setTexture(accumTarget, index: 1)
         computeEncoder?.dispatchThreadgroups(threadGroups, threadsPerThreadgroup: threadsPerGroup)
@@ -374,6 +347,7 @@ extension Renderer: MTKViewDelegate {
         renderEncoder.setFragmentTexture(accumTarget, index: 0)
         renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 6)
         renderEncoder.endEncoding()
+
         guard let drawable = view.currentDrawable else { return }
         commandBuffer.present(drawable)
         commandBuffer.commit()
