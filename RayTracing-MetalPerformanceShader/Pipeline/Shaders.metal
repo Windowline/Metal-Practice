@@ -160,15 +160,14 @@ kernel void primaryRays(constant Uniforms& uniforms [[buffer(0)]],
 }
 
 
-kernel void shadeKernel(uint2 tid [[thread_position_in_grid]],
-                        constant Uniforms& uniforms,
-                        device Ray* rays,
-                        device Ray* shadowRays,
-                        device Intersection* intersections,
-                        device float3 *vtxColors,
-                        device float3 *vtxNormals,
-                        device float2 *random,
-                        texture2d<float, access::write> renderTarget)
+kernel void rayBounce(uint2 tid [[thread_position_in_grid]],
+                      constant Uniforms& uniforms,
+                      device Ray* rays,
+                      device Ray* shadowRays,
+                      device Intersection* intersections,
+                      device float3* vtxColors,
+                      device float3* vtxNormals,
+                      device float2* random)
 {
     if (tid.x < uniforms.width && tid.y < uniforms.height) {
         unsigned int rayIdx = tid.y * uniforms.width + tid.x;
@@ -212,11 +211,11 @@ kernel void shadeKernel(uint2 tid [[thread_position_in_grid]],
     }
 }
     
-kernel void shadowKernel(uint2 tid [[thread_position_in_grid]],
-                         constant Uniforms& uniforms,
-                         device Ray* shadowRays,
-                         device float* intersectionDists,
-                         texture2d<float, access::read_write> renderTarget)
+kernel void rayColor(uint2 tid [[thread_position_in_grid]],
+                     constant Uniforms& uniforms,
+                     device Ray* shadowRays,
+                     device float* intersectionDists,
+                     texture2d<float, access::read_write> renderTarget)
 {
     if (tid.x < uniforms.width && tid.y < uniforms.height) {
         unsigned int rayIdx = tid.y * uniforms.width + tid.x;
@@ -231,38 +230,36 @@ kernel void shadowKernel(uint2 tid [[thread_position_in_grid]],
     }
 }
 
-kernel void accumulateKernel(constant Uniforms & uniforms,
-                             texture2d<float> renderTex,
-                             texture2d<float, access::read_write> accumTex,
-                             uint2 tid [[thread_position_in_grid]])
+kernel void accumulate(constant Uniforms & uniforms,
+                       texture2d<float> renderTex,
+                       texture2d<float, access::read_write> accumTex,
+                       uint2 tid [[thread_position_in_grid]])
 {
     if (tid.x < uniforms.width && tid.y < uniforms.height) {
-        float3 color = renderTex.read(tid).xyz;
+        
+        float3 renderColor = renderTex.read(tid).xyz;
         
         if (uniforms.frameIdx > 0) {
-            float3 prevColor = accumTex.read(tid).xyz;
-            prevColor *= uniforms.frameIdx;
-            color += prevColor;
-            color /= (uniforms.frameIdx + 1);
+            float3 prevAccumColor = accumTex.read(tid).xyz;
+            renderColor += (prevAccumColor * uniforms.frameIdx);
+            renderColor /= (uniforms.frameIdx + 1);
         }
         
-        accumTex.write(float4(color, 1.0), tid);
+        accumTex.write(float4(renderColor, 1.0), tid);
     }
     
     // frame: i-1
-    // accumTex[i-1] = (rnderTex[i-1] + accumTex[i-2] * (i-1)) / i
-      
+    // accumTex[i-1] = (renderTex[i-1] + accumTex[i-2] * (i-1)) / i
     // frame: i
-    // accumTex[i] = (rnderTex[i] + accumTex[i-1] * i) / (i+1)
-      
-    // --> accumTex[i-1] * i = rnderTex[i-1] + accumTex[i-2] * (i-1)
-    // --> accumTex[i] = (rnderTex[i] + rnderTex[i-1] + accumTex[i-2] * (i-1)) / i
-    // --> accumTex[i] = (rnderTex[i] + rnderTex[i-1] + .. rnderTex[0]) / i (재귀적으로 해체)
+    // accumTex[i] = (renderTex[i] + accumTex[i-1] * i) / (i+1)
     
-    // 100 frame 그리면, accumTex[100] = sum(renderTex[0:100]) / 100
+    // --> accumTex[i-1] * i = rnderTex[i-1] + accumTex[i-2] * (i-1)
+    // --> accumTex[i] = (renderTex[i] + renderTex[i-1] + accumTex[i-2] * (i-1)) / i
+    // --> accumTex[i] = (renderTex[i] + renderTex[i-1] + .. renderTex[0]) / i (재귀적으로 해체)
+    // 100 frame --> accumTex[100] = sum(renderTex[0:100]) / 100
 }
-
-// render
+ 
+// MARK: render
 struct Vertex {
     float4 position [[position]];
     float2 uv;
